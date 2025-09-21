@@ -10,7 +10,9 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories" 
-        unique_together = ('name', 'parent_category')
+        constraints = [
+        models.UniqueConstraint(fields=['name', 'parent_category'], name='unique_category_per_parent'),
+    ]
 
     def __str__(self):
         # Shows the hierarchy in the admin panel for clarity.
@@ -41,7 +43,9 @@ class ProductVariant(models.Model):
     stock_quantity = models.PositiveIntegerField(default=0)
 
     class Meta:
-        unique_together = ('product', 'size', 'color') #ensuring can't have two variant of same product with same color and size
+        constraints = [
+        models.UniqueConstraint(fields=['product', 'size', 'color'], name='unique_category_per_variant'),
+    ] #ensuring can't have two variant of same product with same color and size
     
     def __str__(self):
         return f"{self.product.product_name} ({self.size}, {self.color})"
