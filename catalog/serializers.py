@@ -71,7 +71,7 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'items', 'grand_total', 'created_at']
 
 
-class AddCardItemSerializer(serializers.ModelSerializer):
+class AddCartItemSerializer(serializers.ModelSerializer):
     variant_id = serializers.IntegerField()
 
     def validate_variant_id(self, value):
@@ -83,7 +83,7 @@ class AddCardItemSerializer(serializers.ModelSerializer):
     def validate(self, data):
         #for stock levels 
         variant = ProductVariant.objects.get(pk = data['variant_id'])
-        if data['quanity'] > variant.stock_quantity:
+        if data['quantity'] > variant.stock_quantity:
             raise serializers.ValidationError(f"Not enough stock for {variant}. Available: {variant.stock_quantity}")
         return data
     

@@ -4,12 +4,13 @@ from django.core.validators import MinValueValidator
 
 class Category(models.Model):
 
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=120, unique=True)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE, blank=True , null=True , related_name='subcategories')
 
     class Meta:
         verbose_name_plural = "Categories" 
+        unique_together = ('name', 'parent_category')
 
     def __str__(self):
         # Shows the hierarchy in the admin panel for clarity.
@@ -24,7 +25,7 @@ class Product(models.Model):
     product_name = models.CharField(max_length=200)
     slug =  models.SlugField(max_length=250 , unique=True)
     description = models.TextField(blank=True)
-    categoy = models.ForeignKey(Category, on_delete=models.PROTECT , related_name='products')
+    category = models.ForeignKey(Category, on_delete=models.PROTECT , related_name='products')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at =  models.DateTimeField(auto_now=True)
