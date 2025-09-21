@@ -1,5 +1,9 @@
-from rest_framework import viewsets , mixins 
+from rest_framework import viewsets , mixins , status 
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
+from django.db.models import F
+from rest_framework.response import Response
+
 from rest_framework.filters import SearchFilter , OrderingFilter 
 from rest_framework.permissions import IsAuthenticated, AllowAny 
 from django.db.models import Prefetch 
@@ -47,6 +51,18 @@ class CartViewSet(mixins.RetrieveModelMixin,mixins.DestroyModelMixin, viewsets.G
     def get_object(self):
         cart , _ = Cart.objects.get_or_create(user=self.request.user)
         return cart 
+    
+    def destroy(self, request, *args, **kwargs):
+        cart = self.get_object()
+        with transaction.atomic():
+            # Restore stock for each cart item
+            for item in cart.items.select_for_update().all():
+                ProductVariant.objects.filter(pk=item.variant_id).update(
+                    stock_quantity=F('stock_quantity') + item.quantity
+                )
+            # delete items
+            cart.items.all().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CartItemViewSet(mixins.CreateModelMixin,mixins.DestroyModelMixin, mixins.UpdateModelMixin , viewsets.GenericViewSet):
@@ -66,6 +82,16 @@ class CartItemViewSet(mixins.CreateModelMixin,mixins.DestroyModelMixin, mixins.U
     def get_serializer_context(self):
         cart, _ = Cart.objects.get_or_create(user=self.request.user)
         return {'cart_id': cart.id, 'user': self.request.user}
+
+    def perform_destroy(self, instance):
+       
+        with transaction.atomic():
+            # restore stock
+            ProductVariant.objects.filter(pk=instance.variant_id).update(
+                stock_quantity=F('stock_quantity') + instance.quantity
+            )
+            # then delete
+            instance.delete()
 
         
     
