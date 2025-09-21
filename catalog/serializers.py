@@ -14,7 +14,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         model = ProductVariant
         fields = ['id', 'size', 'color', 'price', 'stock_quantity']
 
-#for showing everything in one request if need be 
+#for showing everything in one request 
 class ProductSerializer(serializers.ModelSerializer):
     
     variants = ProductVariantSerializer(many=True, read_only=True)
